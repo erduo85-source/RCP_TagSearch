@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>多维画像查询</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>平台服务中心</span>
+        </div>
+        <nav class="top-nav" aria-label="顶部导航">
+          <a href="#">项目管理</a>
+          <a class="active" href="#">风险管理</a>
+        </nav>
+        <div class="top-actions">
+          <div class="global-search">搜平台用户名</div>
+          <button class="icon-button" aria-label="文档"><i class="ti ti-news"></i></button>
+          <button class="icon-button" aria-label="帮助"><i class="ti ti-circle-arrow-down"></i></button>
+          <button class="icon-button" aria-label="通知"><i class="ti ti-bell"></i></button>
+          <div class="user-chip">
+            <i class="ti ti-user-circle avatar-icon" aria-hidden="true"></i>
+            <span>王刚</span>
+            <i class="ti ti-chevron-down user-caret" aria-hidden="true"></i>
+          </div>
+        </div>
+      </header>
+
+      <aside class="sidebar" aria-label="侧边导航">
+        <div class="menu">
+          <div class="menu-row">
+            <i class="ti ti-chart-histogram menu-icon" aria-hidden="true"></i>
+            <span>支付风控引擎</span>
+            <i class="ti ti-chevron-right menu-arrow-icon" aria-hidden="true"></i>
+          </div>
+          <div class="menu-row">
+            <i class="ti ti-chart-histogram menu-icon" aria-hidden="true"></i>
+            <span>用户风控引擎</span>
+            <i class="ti ti-chevron-right menu-arrow-icon" aria-hidden="true"></i>
+          </div>
+          <div class="menu-row expanded">
+            <i class="ti ti-users menu-icon" aria-hidden="true"></i>
+            <span>用户画像中心</span>
+            <i class="ti ti-chevron-down menu-arrow-icon" aria-hidden="true"></i>
+          </div>
+          <div class="submenu">
+            <button class="submenu-row selected" type="button">多维画像查询</button>
+            <button class="submenu-row" type="button">实时风险监测</button>
+            <button class="submenu-row" type="button">定时用户标签</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="page-title">
+          <h1>多维画像查询</h1>
+          <p>支持账号、设备、IP维度的用户洞察，快速定位登录、注册、支付风险</p>
+        </section>
+
+        <section class="query-card" aria-labelledby="query-title">
+          <h2 id="query-title" class="sr-only">查询条件</h2>
+          <div class="tabs" role="tablist" aria-label="查询维度">
+            <button class="tab active" type="button" data-type="account" role="tab" aria-selected="true">按账号</button>
+            <button class="tab" type="button" data-type="device" role="tab" aria-selected="false">按设备</button>
+            <button class="tab" type="button" data-type="ip" role="tab" aria-selected="false">按IP</button>
+          </div>
+
+          <form class="query-form" novalidate>
+            <select id="fieldSelect" class="field-select" aria-label="搜索字段"></select>
+            <input id="queryInput" class="query-input" type="text" placeholder="请输入账号名" autocomplete="off" />
+            <button id="queryButton" class="query-button" type="submit">立即查询</button>
+          </form>
+
+          <div class="hint-line">
+            <i class="ti ti-info-circle hint-icon" aria-hidden="true"></i>
+            <span id="hintText">支持通过账号名、通行证ID、登录手机、SDKID，快速检索风险账号</span>
+          </div>
+          <div id="errorText" class="error-text" role="alert"></div>
+        </section>
+
+        <section class="recent-card" aria-labelledby="recent-title">
+          <div class="recent-head">
+            <div class="recent-title-wrap">
+              <i class="ti ti-history recent-icon" aria-hidden="true"></i>
+              <h2 id="recent-title">最近查询</h2>
+            </div>
+            <button class="clear-button" type="button">清空记录</button>
+          </div>
+          <div class="recent-list" aria-label="最近查询列表">
+            <button class="history-tag" type="button" data-type="account" data-field="账号名" data-value="10001_12392193311"><i class="ti ti-search tag-icon"></i>10001_12392193311<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEVB-1311"><i class="ti ti-device-desktop tag-icon"></i>DEVB-1311<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEV-54C291"><i class="ti ti-device-desktop tag-icon"></i>DEV-54C291<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="ip" data-field="IP地址" data-value="192.21.11.8"><i class="ti ti-world tag-icon"></i>192.21.11.8<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="ip" data-field="IP地址" data-value="10.21.66.14"><i class="ti ti-world tag-icon"></i>10.21.66.14<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="account" data-field="账号名" data-value="user_8825"><i class="ti ti-user tag-icon"></i>user_8825<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="account" data-field="SDKID" data-value="SDK08521"><i class="ti ti-search tag-icon"></i>SDK08521<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="account" data-field="SDKID" data-value="SDK1021848"><i class="ti ti-search tag-icon"></i>SDK1021848<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEVB-1311"><i class="ti ti-device-desktop tag-icon"></i>DEVB-1311<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEV-54C291"><i class="ti ti-device-desktop tag-icon"></i>DEV-54C291<i class="ti ti-x tag-close"></i></button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="resultModal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal></div>
+      <section class="modal-panel portrait-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <header class="modal-header">
+          <h2 id="modalTitle">账号画像查询</h2>
+          <button class="modal-close" type="button" aria-label="关闭" data-close-modal><i class="ti ti-x"></i></button>
+        </header>
+        <div class="modal-body">
+          <section class="portrait-section account-section">
+            <button id="accountToggle" class="section-title account-toggle" type="button" aria-expanded="false">
+              <span class="section-mark"></span>
+              <span>账号信息</span>
+              <i class="ti ti-chevron-down account-caret" aria-hidden="true"></i>
+            </button>
+            <div class="account-card">
+              <div class="account-summary">
+                <div class="summary-cell">
+                  <span>账号名：</span>
+                  <strong id="accountName">15253509728</strong>
+                  <button class="copy-btn" type="button" data-copy-label="账号名" data-copy-value="15253509728"><i class="ti ti-copy"></i></button>
+                </div>
+                <div class="summary-cell">
+                  <span>通行证ID：</span>
+                  <strong id="passportId">sgs123123</strong>
+                  <button class="copy-btn" type="button" data-copy-label="通行证ID" data-copy-value="sgs123123"><i class="ti ti-copy"></i></button>
+                </div>
+                <div class="summary-cell">
+                  <span>SDKID：</span>
+                  <strong id="sdkId">1239129319239</strong>
+                  <button class="copy-btn" type="button" data-copy-label="SDKID" data-copy-value="1239129319239"><i class="ti ti-copy"></i></button>
+                </div>
+              </div>
+              <div id="accountDetails" class="account-details" hidden>
+                <div class="detail-group">
+                  <h3>账号绑定信息</h3>
+                  <p><span>登录手机</span><strong>152****9728</strong><button class="copy-btn" type="button" data-copy-label="登录手机" data-copy-value="152****9728"><i class="ti ti-copy"></i></button></p>
+                  <p><span>安全手机</span><strong>152****9728</strong><button class="copy-btn" type="button" data-copy-label="安全手机" data-copy-value="152****9728"><i class="ti ti-copy"></i></button></p>
+                  <p><span>安全邮箱</span><strong>67**32@qq.com</strong><button class="copy-btn" type="button" data-copy-label="安全邮箱" data-copy-value="67**32@qq.com"><i class="ti ti-copy"></i></button></p>
+                  <p><span>实名认证</span><strong>已成年</strong><button class="copy-btn" type="button" data-copy-label="实名认证" data-copy-value="已成年"><i class="ti ti-copy"></i></button></p>
+                </div>
+                <div class="detail-group">
+                  <h3>最近登录信息</h3>
+                  <p><span>登录时间</span><strong>2026-07-20 18:33:22</strong></p>
+                  <p><span>登录IP</span><strong>192.186.137.10(上海)</strong><button class="copy-btn" type="button" data-copy-label="登录IP" data-copy-value="192.186.137.10"><i class="ti ti-copy"></i></button></p>
+                  <p><span>登录设备ID</span><strong>de12381218...</strong><button class="copy-btn" type="button" data-copy-label="登录设备ID" data-copy-value="de12381218"><i class="ti ti-copy"></i></button></p>
+                  <p><span>登录方式</span><strong>账密登录</strong></p>
+                </div>
+                <div class="detail-group">
+                  <h3>账号注册信息</h3>
+                  <p><span>注册时间</span><strong>2026-07-20 18:33:22</strong></p>
+                  <p><span>注册IP</span><strong>192.186.137.10(上海)</strong><button class="copy-btn" type="button" data-copy-label="注册IP" data-copy-value="192.186.137.10"><i class="ti ti-copy"></i></button></p>
+                  <p><span>注册设备ID</span><strong>de12381218...</strong><button class="copy-btn" type="button" data-copy-label="注册设备ID" data-copy-value="de12381218"><i class="ti ti-copy"></i></button></p>
+                  <p><span>注册方式</span><strong>账密注册</strong></p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="portrait-section tag-section">
+            <div class="section-title">
+              <span class="section-mark"></span>
+              <span>标签信息</span>
+            </div>
+            <div id="tagWrap" class="tag-wrap collapsed">
+              <span class="risk-tag trust">信任期限号</span>
+              <span class="risk-tag">被盗盲盒账号</span>
+              <span class="risk-tag">其他账号标签示例</span>
+              <span class="risk-tag">自动换行展示</span>
+              <span class="risk-tag">最大同时展示20个</span>
+              <span class="risk-tag">超出一行时展示按钮“查看更多”</span>
+              <span class="risk-tag">其他账号标签示例</span>
+              <span class="risk-tag">自动换行展示</span>
+              <span class="risk-tag">示例</span>
+              <span class="risk-tag">示例</span>
+              <button id="moreTags" class="more-tags" type="button">查看更多 &gt;</button>
+            </div>
+          </section>
+
+          <section class="portrait-section log-section">
+            <div class="section-title">
+              <span class="section-mark"></span>
+              <span>日志信息</span>
+            </div>
+            <div class="log-head">
+              <div class="log-tabs" role="tablist" aria-label="日志类型">
+                <button class="log-tab active" type="button" data-log="login" role="tab" aria-selected="true">登录</button>
+                <button class="log-tab" type="button" data-log="payment" role="tab" aria-selected="false">支付</button>
+              </div>
+              <button id="exportButton" class="export-button" type="button"><i class="ti ti-download"></i>导出详情</button>
+            </div>
+            <div id="logTableArea" class="log-table-area"></div>
+          </section>
+
+          <section class="portrait-section relation-section">
+            <div class="section-title">
+              <span class="section-mark"></span>
+              <span>关联信息</span>
+            </div>
+            <div id="relationArea" class="relation-map"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

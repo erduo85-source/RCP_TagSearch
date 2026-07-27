@@ -1,0 +1,19 @@
+# Local workspace instructions
+AGENTS.md
+
+# Dependency/build output
+node_modules/
+dist/
+build/
+.cache/
+
+# Prototype review and Figma comparison artifacts
+pic/
+pic.zip
+qa-*.png
+figma-*.png
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.log
