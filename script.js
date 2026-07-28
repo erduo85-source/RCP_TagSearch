@@ -99,6 +99,7 @@ const state = {
     ip: "IP",
   },
   logType: "login",
+  page: 1,
   pageSize: 5,
   logRange: getDefaultLogRange(),
   datePickerOpen: false,
@@ -123,6 +124,7 @@ const modalBody = document.querySelector(".modal-body");
 const toast = document.querySelector("#toast");
 
 let toastTimer;
+let lastFocusedElement = null;
 
 function getPlaceholder(type = state.type, field = state.fields[type]) {
   return TYPE_CONFIG[type].placeholders[field] || `请输入${field}`;
@@ -177,16 +179,31 @@ function showToast(message) {
 }
 
 function copyButton(label, value) {
-  return `<button class="copy-btn" type="button" data-copy-label="${label}" data-copy-value="${value}"><i class="ti ti-copy"></i></button>`;
+  return `<button class="copy-btn" type="button" data-copy-label="${label}" data-copy-value="${value}" aria-label="复制${label}" title="复制${label}"><i class="ti ti-copy"></i></button>`;
 }
 
-function copyValue(label, value) {
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(value || "").catch(() => undefined);
+async function copyValue(label, value) {
+  let copied = false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(value || "");
+      copied = true;
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = value || "";
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      copied = document.execCommand("copy");
+      textarea.remove();
+    }
+  } catch (error) {
+    copied = false;
   }
-  showToast(`${label}复制成功`);
+  showToast(copied ? `${label}已复制` : "复制失败，请手动复制");
 }
-
 function getModalType() {
   return state.modal?.type || state.type;
 }
@@ -220,12 +237,11 @@ function renderFieldRow(label, value, copy = false) {
   return `
     <p>
       <span>${label}</span>
-      <strong>${value}</strong>
+      <strong title="${value}">${value}</strong>
       ${copy ? copyButton(label, value) : ""}
     </p>
   `;
 }
-
 function renderAccountInfo(queryValue) {
   const field = getModalField("account");
   const account = field === "\u8d26\u53f7\u540d" && queryValue ? queryValue : "10001_12392193311";
@@ -233,30 +249,27 @@ function renderAccountInfo(queryValue) {
   const sdk = field === "SDKID" && queryValue ? queryValue : "1239129319239";
   return `
     <section class="portrait-section info-section">
-      ${renderSectionTitle("账号信息", { toggle: true, expanded: false })}
+      ${renderSectionTitle("基础信息", { toggle: true, expanded: true })}
       <div class="info-card">
         <div class="account-summary">
-          <div class="summary-cell"><span>账号名：</span><strong>${account}</strong>${copyButton("账号名", account)}</div>
-          <div class="summary-cell"><span>通行证ID：</span><strong>${passport}</strong>${copyButton("通行证ID", passport)}</div>
-          <div class="summary-cell"><span>SDKID：</span><strong>${sdk}</strong>${copyButton("SDKID", sdk)}</div>
+          <div class="summary-cell"><span>SDKID：</span><strong title="${sdk}">${sdk}</strong>${copyButton("SDKID", sdk)}</div>
+          <div class="summary-cell"><span>通行证ID：</span><strong title="${passport}">${passport}</strong>${copyButton("通行证ID", passport)}</div>
+          <div class="summary-cell"><span>账号名：</span><strong title="${account}">${account}</strong>${copyButton("账号名", account)}</div>
         </div>
-        <div id="infoDetails" class="account-details" hidden>
+        <div id="infoDetails" class="account-details">
           <div class="detail-group">
-            <h3>账号绑定信息</h3>
             ${renderFieldRow("登录手机", "152****9728", true)}
             ${renderFieldRow("安全手机", "152****9728", true)}
             ${renderFieldRow("安全邮箱", "67**32@qq.com", true)}
             ${renderFieldRow("实名认证", "已成年", true)}
           </div>
           <div class="detail-group">
-            <h3>最近登录信息</h3>
             ${renderFieldRow("登录时间", "2026-07-20 18:33:22")}
             ${renderFieldRow("登录IP", "192.186.137.10(上海)", true)}
             ${renderFieldRow("登录设备ID", "de12381218...", true)}
             ${renderFieldRow("登录方式", "账密登录")}
           </div>
           <div class="detail-group">
-            <h3>账号注册信息</h3>
             ${renderFieldRow("注册时间", "2026-07-20 18:33:22")}
             ${renderFieldRow("注册IP", "192.186.137.10(上海)", true)}
             ${renderFieldRow("注册设备ID", "de12381218...", true)}
@@ -277,8 +290,8 @@ function renderDeviceInfo(queryValue) {
       ${renderSectionTitle("设备信息", { toggle: true, expanded: true })}
       <div class="info-card">
         <div class="device-summary">
-          <div class="summary-cell"><span>设备ID：</span><strong>${deviceId}</strong>${copyButton("设备ID", deviceId)}</div>
-          <div class="summary-cell"><span>设备指纹：</span><strong>${finger}</strong>${copyButton("设备指纹", finger)}</div>
+          <div class="summary-cell"><span>设备ID：</span><strong title="${deviceId}">${deviceId}</strong>${copyButton("设备ID", deviceId)}</div>
+          <div class="summary-cell"><span>设备指纹：</span><strong title="${finger}">${finger}</strong>${copyButton("设备指纹", finger)}</div>
         </div>
         <div id="infoDetails" class="device-details">
           <div class="device-detail-col">
@@ -306,7 +319,7 @@ function renderIpInfo(queryValue) {
       ${renderSectionTitle("IP信息", { toggle: true, expanded: true })}
       <div class="info-card">
         <div class="device-summary one-line">
-          <div class="summary-cell"><span>IP地址</span><strong>${ip}</strong>${copyButton("IP地址", ip)}</div>
+          <div class="summary-cell"><span>IP地址</span><strong title="${ip}">${ip}</strong>${copyButton("IP地址", ip)}</div>
         </div>
         <div id="infoDetails" class="device-details ip-details">
           <div class="device-detail-col">${renderFieldRow("IP归属地", "中国 上海")}</div>
@@ -337,7 +350,7 @@ function renderTags() {
 }
 
 function buildRows(type, logType) {
-  return Array.from({ length: 20 }, (_, index) => {
+  return Array.from({ length: 48 }, (_, index) => {
     const action = ACTIONS[index % ACTIONS.length];
     return {
       id: index + 1,
@@ -349,16 +362,27 @@ function buildRows(type, logType) {
       ip: "192.168.1.0",
       ipSub: "浙江省杭州市（移动4G）",
       order: "393808819397226496",
-      amount: "0.01 CNY",
-      score: "91/100",
+      amount: "¥648.00",
+      score: 91,
       action,
-      muted: action === "验证码验证" || action === "放行",
       type,
       logType,
     };
   });
 }
 
+function getRiskClass(score) {
+  if (score >= 90) return "risk-critical";
+  if (score >= 70) return "risk-high";
+  if (score >= 40) return "risk-medium";
+  return "risk-low";
+}
+
+function getActionClass(action) {
+  if (action === "拦截") return "action-danger";
+  if (["放行", "验证码验证通过", "滑块验证通过"].includes(action)) return "action-success";
+  return "action-warning";
+}
 function renderEmpty() {
   return `
     <div class="empty-panel">
@@ -374,7 +398,7 @@ function renderEmpty() {
 function renderLogTabs() {
   const type = getModalType();
   const tabsHtml = TYPE_CONFIG[type].tabs.map((log) => `
-    <button class="log-tab${state.logType === log ? " active" : ""}" type="button" data-log="${log}" role="tab" aria-selected="${state.logType === log}">
+    <button class="log-tab${state.logType === log ? " active" : ""}" type="button" data-log="${log}" role="tab" aria-selected="${state.logType === log}" tabindex="${state.logType === log ? 0 : -1}">
       ${LOG_LABELS[log]}
     </button>
   `).join("");
@@ -391,12 +415,11 @@ function renderLogTabs() {
           </button>
           ${state.datePickerOpen ? renderDatePickerDropdown() : ""}
         </div>
-        <button id="exportButton" class="export-button" type="button"><i class="ti ti-download"></i>导出详情</button>
+        <button id="exportButton" class="export-button" type="button"${state.empty ? " disabled" : ""}><i class="ti ti-download"></i>导出详情</button>
       </div>
     </div>
   `;
 }
-
 function getRangeDays() {
   const start = parseDate(state.logRange.start);
   const end = parseDate(state.logRange.end);
@@ -421,6 +444,7 @@ function renderDatePickerDropdown() {
       const isStart = value === state.logRange.start;
       const isEnd = value === state.logRange.end;
       const inRange = date >= start && date <= end;
+      const isFuture = date > parseDate(today);
       const classes = [
         "picker-day",
         inView ? "" : "out-month",
@@ -428,8 +452,9 @@ function renderDatePickerDropdown() {
         isStart ? "range-start" : "",
         isEnd ? "range-end" : "",
         inRange ? "in-range" : "",
+        isFuture ? "future" : "",
       ].filter(Boolean).join(" ");
-      return `<button class="${classes}" type="button" data-date="${value}">${date.getDate()}</button>`;
+      return `<button class="${classes}" type="button" data-date="${value}"${isFuture ? " disabled" : ""}>${date.getDate()}</button>`;
     }).join("");
     return `<div class="picker-row">${cells}</div>`;
   }).join("");
@@ -445,7 +470,7 @@ function renderDatePickerDropdown() {
         <button class="picker-nav" type="button" data-picker-nav="12" aria-label="下一年">»</button>
       </div>
       <div class="picker-body">
-        <div class="picker-week"><span>Mon</span><span>Tue</span><span>Wen</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+        <div class="picker-week"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
         ${rows}
       </div>
       <button id="pickerToday" class="picker-today" type="button">Today</button>
@@ -454,32 +479,34 @@ function renderDatePickerDropdown() {
 }
 
 function renderTableFooter(logType) {
+  const total = 48;
+  const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+  state.page = Math.min(Math.max(1, state.page), totalPages);
   const actionText = logType === "payment" ? "下单" : logType === "register" ? "注册" : "登录";
+  const pageSet = new Set([1, totalPages, state.page - 1, state.page, state.page + 1]);
+  const pages = Array.from(pageSet).filter((page) => page >= 1 && page <= totalPages).sort((a, b) => a - b);
+  let previous = 0;
+  const pageItems = pages.map((page) => {
+    const gap = previous && page - previous > 1 ? '<span class="pager-ellipsis">…</span>' : "";
+    previous = page;
+    return `${gap}<button class="page-button${page === state.page ? " current" : ""}" type="button" data-page="${page}" aria-current="${page === state.page ? "page" : "false"}">${page}</button>`;
+  }).join("");
   return `
     <div class="table-footer">
-      <span>近${getRangeDays()}日共发起${actionText}48次，其中高风险${actionText}30次</span>
+      <span>近${getRangeDays()}日共发起${actionText}${total}次，其中高风险${actionText}30次</span>
       <div class="pager" aria-label="分页">
-        <span class="muted">&lt;</span>
-        <span>1</span>
-        <span class="muted">...</span>
-        <span>4</span>
-        <span>5</span>
-        <span class="current">6</span>
-        <span>7</span>
-        <span>8</span>
-        <span class="muted">...</span>
-        <span>50</span>
-        <span>&gt;</span>
         <select id="pageSizeSelect" class="page-size" aria-label="每页条数">
           <option value="5"${state.pageSize === 5 ? " selected" : ""}>5条/页</option>
           <option value="10"${state.pageSize === 10 ? " selected" : ""}>10条/页</option>
           <option value="20"${state.pageSize === 20 ? " selected" : ""}>20条/页</option>
         </select>
+        <button class="page-button page-nav" type="button" data-page-delta="-1" aria-label="上一页"${state.page === 1 ? " disabled" : ""}>‹</button>
+        ${pageItems}
+        <button class="page-button page-nav" type="button" data-page-delta="1" aria-label="下一页"${state.page === totalPages ? " disabled" : ""}>›</button>
       </div>
     </div>
   `;
 }
-
 function renderTableRows(rows, columns) {
   return rows.map((row) => `
     <tr>
@@ -494,44 +521,38 @@ function renderLogTable() {
   }
 
   const type = getModalType();
-  const rows = buildRows(type, state.logType).slice(0, state.pageSize);
+  const allRows = buildRows(type, state.logType);
+  const startIndex = (state.page - 1) * state.pageSize;
+  const rows = allRows.slice(startIndex, startIndex + state.pageSize);
   const timeLabel = state.logType === "payment" ? "下单时间" : state.logType === "register" ? "注册时间" : "登录时间";
   const accountCol = {
     title: "账号信息",
-    render: (row) => `<span class="cell-main">${row.account}${copyButton("账号信息", row.account)}</span><span class="cell-sub">${row.accountSub}</span>`,
+    render: (row) => `<span class="cell-main"><span class="cell-value" title="${row.account}">${row.account}</span>${copyButton("账号信息", row.account)}</span><span class="cell-sub" title="${row.accountSub}">${row.accountSub}</span>`,
   };
   const deviceCol = {
     title: "设备信息",
-    render: (row) => `<span class="cell-main">${row.device}${copyButton("设备ID", row.device)}</span><span class="cell-sub">${row.deviceSub}</span>`,
+    render: (row) => `<span class="cell-main"><span class="cell-value" title="${row.device}">${row.device}</span>${copyButton("设备ID", row.device)}</span><span class="cell-sub" title="${row.deviceSub}">${row.deviceSub}</span>`,
   };
   const ipCol = {
     title: "IP 信息",
-    render: (row) => `<span class="cell-main">${row.ip}${copyButton("IP地址", row.ip)}</span><span class="cell-sub">${row.ipSub}</span>`,
+    render: (row) => `<span class="cell-main"><span class="cell-value" title="${row.ip}">${row.ip}</span>${copyButton("IP地址", row.ip)}</span><span class="cell-sub" title="${row.ipSub}">${row.ipSub}</span>`,
   };
   const orderCol = {
     title: "下单信息",
-    render: (row) => `<span class="cell-main">${row.order}${copyButton("订单号", row.order)}</span><span class="cell-sub">${row.amount}</span>`,
+    render: (row) => `<span class="cell-main"><span class="cell-value" title="${row.order}">订单号：${row.order}</span>${copyButton("订单号", row.order)}</span><span class="cell-sub">金额：${row.amount}</span>`,
   };
 
   const columns = [
-    { title: timeLabel, className: "time-cell", render: (row) => row.time },
+    { title: timeLabel, className: "time-cell", render: (row) => `<span title="${row.time}">${row.time}</span>` },
   ];
 
-  if (state.logType === "payment") {
-    columns.push(orderCol);
-  }
-  if (type !== "account") {
-    columns.push(accountCol);
-  }
-  if (type !== "device") {
-    columns.push(deviceCol);
-  }
-  if (type !== "ip") {
-    columns.push(ipCol);
-  }
+  if (state.logType === "payment") columns.push(orderCol);
+  if (type !== "account") columns.push(accountCol);
+  if (type !== "device") columns.push(deviceCol);
+  if (type !== "ip") columns.push(ipCol);
   columns.push(
-    { title: "风险分", className: "log-score", render: (row) => row.score },
-    { title: "处置动作", render: (row) => `<span class="status-dot${row.muted ? " gray" : ""}"></span>${row.action}` },
+    { title: "风险分", className: "log-score", render: (row) => `<span class="risk-score ${getRiskClass(row.score)}">${row.score}/100</span>` },
+    { title: "处置动作", render: (row) => `<span class="action-state ${getActionClass(row.action)}"><span class="status-dot" aria-hidden="true"></span>${row.action}</span>` },
   );
 
   return `
@@ -544,7 +565,6 @@ function renderLogTable() {
     ${renderTableFooter(state.logType)}
   `;
 }
-
 function renderLogs() {
   return `
     <section class="portrait-section log-section">
@@ -583,35 +603,39 @@ function relationData() {
 
 function renderRelationCard(card) {
   if (state.empty) {
-    return `<div class="relation-card empty"><h3>${card.title} <span>${card.count}</span></h3><div class="relation-list">${renderEmpty()}</div></div>`;
+    return `<div class="relation-card empty" data-kind="${card.kind}"><h3>${card.title} <span>${card.count}</span></h3><div class="relation-list">${renderEmpty()}</div></div>`;
   }
   const copyLabel = card.kind === "ip" ? "IP地址" : card.kind === "device" ? "设备ID" : "SDKID";
+  const total = Number.parseInt(card.count, 10) || 5;
+  const headers = card.kind === "ip" ? ["IP地址", "归属地", "关联次数"] : card.kind === "device" ? ["设备ID", "设备型号", "关联次数"] : ["SDKID", "账号名", "关联次数"];
+  const subValue = card.kind === "account" ? card.sub.replace(/^账号名\s*/, "") : card.sub;
+  const rows = Array.from({ length: total }, (_, index) => `
+    <div class="relation-row relation-item${index >= 5 ? " is-extra" : ""}" role="row">
+      <span class="relation-primary" role="cell"><span class="relation-value" title="${card.value}">${card.value}</span>${copyButton(copyLabel, card.value)}</span>
+      <span class="relation-secondary" role="cell" title="${subValue}">${subValue}</span>
+      <span class="relation-count" role="cell">${total - index}</span>
+    </div>
+  `).join("");
   return `
-    <div class="relation-card">
+    <div class="relation-card" data-kind="${card.kind}">
       <h3>${card.title} <span>${card.count}</span></h3>
-      <div class="relation-list">
-        ${Array.from({ length: 3 }, () => `
-          <div class="relation-item">
-            <p><span>${card.label}</span>${card.value}${copyButton(copyLabel, card.value)}</p>
-            <p class="relation-sub">${card.sub}</p>
-          </div>
-        `).join("")}
+      <div class="relation-list" role="table" aria-label="${card.title}">
+        <div class="relation-row relation-table-head" role="row">${headers.map((header) => `<span role="columnheader">${header}</span>`).join("")}</div>
+        ${rows}
       </div>
+      ${total > 5 ? `<button class="relation-more" type="button" data-relation-toggle>查看更多 &gt;</button>` : ""}
     </div>
   `;
 }
-
 function renderRelations() {
   const data = relationData();
   return `
     <section class="portrait-section relation-section">
       ${renderSectionTitle("关联信息")}
-      <div class="relation-map">
+      <div class="relation-grid">
         ${renderRelationCard(data.left)}
-        <div class="relation-center" aria-hidden="true"><i class="ti ${data.center}"></i></div>
         ${renderRelationCard(data.right)}
       </div>
-      <div class="relation-summary">${data.summary}</div>
     </section>
   `;
 }
@@ -642,40 +666,64 @@ function bindModalDynamicEvents() {
     }
   }
 
-  infoToggle?.addEventListener("click", () => {
-    const expanded = infoToggle.getAttribute("aria-expanded") === "true";
-    infoToggle.setAttribute("aria-expanded", String(!expanded));
-    if (infoDetails) infoDetails.hidden = expanded;
-  });
+  function refreshLogTable() {
+    const currentArea = document.querySelector("#logTableArea");
+    if (currentArea) {
+      currentArea.innerHTML = renderLogTable();
+      bindModalDynamicEvents();
+    }
+  }
 
-  moreTags?.addEventListener("click", () => {
-    const tagWrap = document.querySelector("#tagWrap");
-    tagWrap?.classList.remove("collapsed");
-    tagWrap?.classList.add("expanded");
-    moreTags.hidden = true;
-  });
+  if (infoToggle?.dataset.bound !== "true") {
+    infoToggle.dataset.bound = "true";
+    infoToggle.addEventListener("click", () => {
+      const expanded = infoToggle.getAttribute("aria-expanded") === "true";
+      infoToggle.setAttribute("aria-expanded", String(!expanded));
+      if (infoDetails) infoDetails.hidden = expanded;
+    });
+  }
 
-  document.querySelectorAll(".log-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
+  if (moreTags?.dataset.bound !== "true") {
+    moreTags.dataset.bound = "true";
+    moreTags.addEventListener("click", () => {
+      const tagWrap = document.querySelector("#tagWrap");
+      const expanded = tagWrap?.classList.toggle("expanded") || false;
+      tagWrap?.classList.toggle("collapsed", !expanded);
+      moreTags.textContent = expanded ? "收起 <" : "查看更多 >";
+    });
+  }
+
+  document.querySelectorAll(".log-tab").forEach((tab, index, tabList) => {
+    if (tab.dataset.bound === "true") return;
+    tab.dataset.bound = "true";
+    const activateTab = () => {
       state.logType = tab.dataset.log;
-      document.querySelectorAll(".log-tab").forEach((item) => {
-        const selected = item === tab;
-        item.classList.toggle("active", selected);
-        item.setAttribute("aria-selected", String(selected));
-      });
-      if (logTableArea) {
-        logTableArea.innerHTML = renderLogTable();
-        bindModalDynamicEvents();
-      }
+      state.page = 1;
+      state.datePickerOpen = false;
+      refreshLogSection();
+    };
+    tab.addEventListener("click", activateTab);
+    tab.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      const next = tabList[(index + direction + tabList.length) % tabList.length];
+      state.logType = next.dataset.log;
+      state.page = 1;
+      refreshLogSection();
+      window.requestAnimationFrame(() => document.querySelector(`.log-tab[data-log="${state.logType}"]`)?.focus());
     });
   });
 
-  dateRangeButton?.addEventListener("click", (event) => {
-    event.stopPropagation();
-    state.datePickerOpen = !state.datePickerOpen;
-    state.pickerMonth = state.pickerMonth || state.logRange.end.slice(0, 7);
-    refreshLogSection();
-  });
+  if (dateRangeButton?.dataset.bound !== "true") {
+    dateRangeButton.dataset.bound = "true";
+    dateRangeButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.datePickerOpen = !state.datePickerOpen;
+      state.pickerMonth = state.pickerMonth || state.logRange.end.slice(0, 7);
+      refreshLogSection();
+    });
+  }
 
   document.querySelectorAll(".picker-nav").forEach((button) => {
     button.addEventListener("click", (event) => {
@@ -688,24 +736,29 @@ function bindModalDynamicEvents() {
     });
   });
 
-  document.querySelectorAll(".picker-day").forEach((button) => {
+  document.querySelectorAll(".picker-day:not(:disabled)").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       const selected = button.dataset.date;
       if (state.dateSelecting === "start") {
         state.logRange.start = selected;
-        if (parseDate(selected) > parseDate(state.logRange.end)) {
-          state.logRange.end = selected;
-        }
+        if (parseDate(selected) > parseDate(state.logRange.end)) state.logRange.end = selected;
         state.dateSelecting = "end";
         state.datePickerOpen = true;
         showToast("请选择结束日期");
       } else {
         const start = parseDate(state.logRange.start);
         const end = parseDate(selected);
-        state.logRange = end < start
-          ? { start: selected, end: state.logRange.start }
-          : { start: state.logRange.start, end: selected };
+        const nextRange = end < start ? { start: selected, end: state.logRange.start } : { start: state.logRange.start, end: selected };
+        const days = Math.round((parseDate(nextRange.end) - parseDate(nextRange.start)) / 86400000) + 1;
+        if (days > 30) {
+          showToast("最多可查询连续 30 天的日志");
+          state.datePickerOpen = true;
+          refreshLogSection();
+          return;
+        }
+        state.logRange = nextRange;
+        state.page = 1;
         state.dateSelecting = "start";
         state.datePickerOpen = false;
       }
@@ -717,6 +770,7 @@ function bindModalDynamicEvents() {
   document.querySelector("#pickerToday")?.addEventListener("click", (event) => {
     event.stopPropagation();
     state.logRange = getDefaultLogRange();
+    state.page = 1;
     state.dateSelecting = "start";
     state.datePickerOpen = false;
     state.pickerMonth = state.logRange.end.slice(0, 7);
@@ -725,19 +779,46 @@ function bindModalDynamicEvents() {
 
   pageSizeSelect?.addEventListener("change", () => {
     state.pageSize = Number(pageSizeSelect.value);
-    if (logTableArea) {
-      logTableArea.innerHTML = renderLogTable();
-      bindModalDynamicEvents();
-    }
+    state.page = 1;
+    refreshLogTable();
   });
 
-  document.querySelector("#exportButton")?.addEventListener("click", exportExcel);
-}
+  document.querySelectorAll(".page-button[data-page]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.page = Number(button.dataset.page);
+      refreshLogTable();
+    });
+  });
 
+  document.querySelectorAll(".page-button[data-page-delta]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.page += Number(button.dataset.pageDelta);
+      refreshLogTable();
+    });
+  });
+
+  document.querySelectorAll("[data-relation-toggle]").forEach((button) => {
+    if (button.dataset.bound === "true") return;
+    button.dataset.bound = "true";
+    button.addEventListener("click", () => {
+      const card = button.closest(".relation-card");
+      const expanded = card?.classList.toggle("expanded") || false;
+      button.textContent = expanded ? "收起 <" : "查看更多 >";
+    });
+  });
+
+  const exportButton = document.querySelector("#exportButton");
+  if (exportButton && exportButton.dataset.bound !== "true") {
+    exportButton.dataset.bound = "true";
+    exportButton.addEventListener("click", exportExcel);
+  }
+}
 function openModal(context = null) {
+  lastFocusedElement = document.activeElement;
   state.modal = context;
   const value = getModalValue();
   state.empty = /空|empty|zero/.test(value.toLowerCase());
+  state.page = 1;
   state.pageSize = 5;
   state.logType = "login";
   state.logRange = getDefaultLogRange();
@@ -747,44 +828,47 @@ function openModal(context = null) {
   renderModalBody();
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  window.requestAnimationFrame(() => modal.querySelector(".modal-close")?.focus());
 }
 
 function closeModal() {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
   state.modal = null;
+  if (lastFocusedElement instanceof HTMLElement) lastFocusedElement.focus();
+  lastFocusedElement = null;
 }
-
 function exportExcel() {
+  if (state.empty) return;
   const type = getModalType();
-  const sheets = ["login", "register", "payment"].map((log) => {
-    const rows = buildRows(type, log).slice(0, 20);
-    const tableRows = rows.map((row) => `
-      <tr>
-        <td>${row.time}</td>
-        <td>${row.account}</td>
-        <td>${row.accountSub}</td>
-        <td>${row.device}</td>
-        <td>${row.deviceSub}</td>
-        <td>${row.ip}</td>
-        <td>${row.ipSub}</td>
-        <td>${row.order}</td>
-        <td>${row.amount}</td>
-        <td>${row.score}</td>
-        <td>${row.action}</td>
-      </tr>
-    `).join("");
-    return `<h3>${LOG_LABELS[log]}</h3><table><tr><th>时间</th><th>账号</th><th>账号名</th><th>设备ID</th><th>设备型号</th><th>IP地址</th><th>归属地</th><th>订单号</th><th>金额</th><th>风险分</th><th>处置动作</th></tr>${tableRows}</table>`;
-  }).join("");
-  const blob = new Blob([`<html><meta charset="UTF-8"><body>${sheets}</body></html>`], { type: "application/vnd.ms-excel;charset=utf-8" });
+  const log = state.logType;
+  const rows = buildRows(type, log);
+  const tableRows = rows.map((row) => `
+    <tr>
+      <td>${row.time}</td>
+      <td>${row.account}</td>
+      <td>${row.accountSub}</td>
+      <td>${row.device}</td>
+      <td>${row.deviceSub}</td>
+      <td>${row.ip}</td>
+      <td>${row.ipSub}</td>
+      <td>${row.order}</td>
+      <td>${row.amount}</td>
+      <td>${row.score}</td>
+      <td>${row.action}</td>
+    </tr>
+  `).join("");
+  const sheet = `<h3>${LOG_LABELS[log]}日志</h3><table><tr><th>时间</th><th>账号</th><th>账号名</th><th>设备ID</th><th>设备型号</th><th>IP地址</th><th>归属地</th><th>订单号</th><th>金额</th><th>风险分</th><th>处置动作</th></tr>${tableRows}</table>`;
+  const blob = new Blob([`<html><meta charset="UTF-8"><body>${sheet}</body></html>`], { type: "application/vnd.ms-excel;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${TYPE_CONFIG[type].title}-导出详情.xls`;
+  link.download = `${TYPE_CONFIG[type].title}_${LOG_LABELS[log]}日志_${state.logRange.start}_${state.logRange.end}.xls`;
   link.click();
   URL.revokeObjectURL(link.href);
   showToast("导出详情已生成");
 }
-
 function validateQueryValue(value) {
   if (["sdkId", "passportId"].includes(state.dimension) && !/^[A-Za-z0-9_-]{3,64}$/.test(value)) return `${DIMENSION_CONFIG[state.dimension].field}格式不正确`;
   if (["deviceId", "deviceFingerprint"].includes(state.dimension) && value.length < 4) return `${DIMENSION_CONFIG[state.dimension].field}格式不正确`;
@@ -876,11 +960,12 @@ queryForm.addEventListener("submit", (event) => {
 
 document.querySelectorAll(".history-tag").forEach((tag) => {
   tag.addEventListener("click", () => {
-    applyDimension(tag.dataset.dimension, tag.dataset.field);
-    queryInput.value = tag.dataset.value;
-    state.values[state.dimension] = tag.dataset.value;
-    updateClearButton();
-    queryInput.focus();
+    setQueryError();
+    openModal({
+      type: tag.dataset.type,
+      field: tag.dataset.field,
+      value: tag.dataset.value,
+    });
   });
 });
 
@@ -895,9 +980,23 @@ modal.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && modal.classList.contains("open")) {
+  if (!modal.classList.contains("open")) return;
+  if (event.key === "Escape") {
     closeModal();
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const focusable = Array.from(modal.querySelectorAll('button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+    .filter((element) => !element.hidden && element.offsetParent !== null);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
   }
 });
-
 applyDimension("sdkId");

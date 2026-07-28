@@ -5,30 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>用户风险画像</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="./styles.css?v=20260728-query-v2" />
+    <link rel="stylesheet" href="./styles.css?v=20260728-modal-v17" />
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span>平台服务中心</span>
-        </div>
-        <nav class="top-nav" aria-label="顶部导航">
-          <a href="#">项目管理</a>
-          <a class="active" href="#">风险管理</a>
-        </nav>
-        <div class="top-actions">
-          <div class="global-search">搜平台用户名</div>
-          <button class="icon-button" aria-label="文档"><i class="ti ti-news"></i></button>
-          <button class="icon-button" aria-label="帮助"><i class="ti ti-circle-arrow-down"></i></button>
-          <button class="icon-button" aria-label="通知"><i class="ti ti-bell"></i></button>
-          <div class="user-chip">
-            <i class="ti ti-user-circle avatar-icon" aria-hidden="true"></i>
-            <span>王刚</span>
-            <i class="ti ti-chevron-down user-caret" aria-hidden="true"></i>
-          </div>
-        </div>
+      <header class="topbar" aria-label="顶部导航">
+        <img class="topbar-design" src="./assets/top-navigation-design.png" alt="平台服务中心顶部导航" />
       </header>
 
       <aside class="sidebar" aria-label="侧边导航">
@@ -49,16 +31,16 @@
             <i class="ti ti-chevron-down menu-arrow-icon" aria-hidden="true"></i>
           </div>
           <div class="submenu">
-            <button class="submenu-row selected" type="button">多维画像查询</button>
-            <button class="submenu-row" type="button">实时风险监测</button>
-            <button class="submenu-row" type="button">定时用户标签</button>
+            <button class="submenu-row selected" type="button">用户风险查询</button>
+            <button class="submenu-row" type="button">实时检测管理</button>
+            <button class="submenu-row" type="button">用户标签管理</button>
           </div>
         </div>
       </aside>
 
       <main class="main">
         <section class="page-title">
-          <h1>用户风险画像</h1>
+          <h1>用户风险查询</h1>
           <p>风险调查 / 用户风险画像</p>
         </section>
 
@@ -106,6 +88,7 @@
             <button class="history-tag" type="button" data-dimension="accountName" data-type="account" data-field="账号名" data-value="alex.chen@example.com" title="alex.chen@example.com"><span class="history-type">账号名</span><span class="history-value">alex.chen@example.com</span></button>
             <button class="history-tag" type="button" data-dimension="passportId" data-type="account" data-field="通行证ID" data-value="184027391" title="184027391"><span class="history-type">通行证ID</span><span class="history-value">184027391</span></button>
             <button class="history-tag" type="button" data-dimension="deviceFingerprint" data-type="device" data-field="设备指纹" data-value="DF-9A72-41C8" title="DF-9A72-41C8"><span class="history-type">设备指纹</span><span class="history-value">DF-9A72-41C8</span></button>
+            <button class="history-tag" type="button" data-dimension="ipAddress" data-type="ip" data-field="IP地址" data-value="192.168.200.10" title="192.168.200.10"><span class="history-type">IP地址</span><span class="history-value">192.168.200.10</span></button>
           </div>
           </div>
             </div>
@@ -115,11 +98,11 @@
     </div>
 
     <div id="resultModal" class="modal" aria-hidden="true">
-      <div class="modal-backdrop" data-close-modal></div>
+      <div class="modal-backdrop" aria-hidden="true"></div>
       <section class="modal-panel portrait-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <header class="modal-header">
           <h2 id="modalTitle">账号画像查询</h2>
-          <button class="modal-close" type="button" aria-label="关闭" data-close-modal><i class="ti ti-x"></i></button>
+          <button class="modal-close" type="button" aria-label="关闭账号画像查询" data-close-modal><i class="ti ti-x"></i></button>
         </header>
         <div class="modal-body">
           <section class="portrait-section account-section">
@@ -220,6 +203,6 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <script src="./script.js?v=20260728-query-v2"></script>
+    <script src="./script.js?v=20260728-modal-v17"></script>
   </body>
 </html>
