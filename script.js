@@ -58,6 +58,7 @@ const state = {
   logType: "login",
   pageSize: 5,
   empty: false,
+  modal: null,
 };
 
 const tabs = Array.from(document.querySelectorAll(".tab"));
@@ -122,6 +123,21 @@ function copyValue(label, value) {
   showToast(`${label}复制成功`);
 }
 
+function getModalType() {
+  return state.modal?.type || state.type;
+}
+
+function getModalField(type = getModalType()) {
+  if (state.modal?.type === type && state.modal.field) {
+    return state.modal.field;
+  }
+  return state.fields[type];
+}
+
+function getModalValue() {
+  return state.modal?.value ?? queryInput.value.trim();
+}
+
 function renderSectionTitle(title, options = {}) {
   const { toggle = false, expanded = true } = options;
   if (!toggle) {
@@ -147,9 +163,10 @@ function renderFieldRow(label, value, copy = false) {
 }
 
 function renderAccountInfo(queryValue) {
-  const account = state.fields.account === "账号名" && queryValue ? queryValue : "10001_12392193311";
-  const passport = state.fields.account === "通行证ID" && queryValue ? queryValue : "sgs123123";
-  const sdk = state.fields.account === "SDKID" && queryValue ? queryValue : "1239129319239";
+  const field = getModalField("account");
+  const account = field === "\u8d26\u53f7\u540d" && queryValue ? queryValue : "10001_12392193311";
+  const passport = field === "\u901a\u884c\u8bc1ID" && queryValue ? queryValue : "sgs123123";
+  const sdk = field === "SDKID" && queryValue ? queryValue : "1239129319239";
   return `
     <section class="portrait-section info-section">
       ${renderSectionTitle("账号信息", { toggle: true, expanded: false })}
@@ -188,8 +205,9 @@ function renderAccountInfo(queryValue) {
 }
 
 function renderDeviceInfo(queryValue) {
-  const deviceId = state.fields.device === "设备ID" && queryValue ? queryValue : "21312391923193193123";
-  const finger = state.fields.device === "设备指纹" && queryValue ? queryValue : "1238123912391923919391923913";
+  const field = getModalField("device");
+  const deviceId = field === "\u8bbe\u5907ID" && queryValue ? queryValue : "21312391923193193123";
+  const finger = field === "\u8bbe\u5907\u6307\u7eb9" && queryValue ? queryValue : "1238123912391923919391923913";
   return `
     <section class="portrait-section info-section">
       ${renderSectionTitle("设备信息", { toggle: true, expanded: true })}
@@ -237,16 +255,17 @@ function renderIpInfo(queryValue) {
 }
 
 function renderTags() {
+  const type = getModalType();
   const tags = {
     account: ["信任期限号", "被盗盲盒账号", "其他账号标签示例", "自动换行展示", "超出一行时展示按钮“查看更多”", "其他账号标签示例", "自动换行展示", "示例", "示例"],
     device: ["盗号设备", "刷号设备"],
     ip: ["黑产IP"],
-  }[state.type];
+  }[type];
   return `
     <section class="portrait-section tag-section">
       ${renderSectionTitle("标签信息")}
       <div id="tagWrap" class="tag-wrap collapsed">
-        ${tags.map((tag, index) => `<span class="risk-tag${index === 0 && state.type === "account" ? " trust" : ""}">${tag}</span>`).join("")}
+        ${tags.map((tag, index) => `<span class="risk-tag${index === 0 && type === "account" ? " trust" : ""}">${tag}</span>`).join("")}
         ${tags.length > 4 ? `<button id="moreTags" class="more-tags" type="button">查看更多 &gt;</button>` : ""}
       </div>
     </section>
@@ -289,7 +308,8 @@ function renderEmpty() {
 }
 
 function renderLogTabs() {
-  const tabsHtml = TYPE_CONFIG[state.type].tabs.map((log) => `
+  const type = getModalType();
+  const tabsHtml = TYPE_CONFIG[type].tabs.map((log) => `
     <button class="log-tab${state.logType === log ? " active" : ""}" type="button" data-log="${log}" role="tab" aria-selected="${state.logType === log}">
       ${LOG_LABELS[log]}
     </button>
@@ -342,7 +362,8 @@ function renderLogTable() {
     return renderEmpty();
   }
 
-  const rows = buildRows(state.type, state.logType).slice(0, state.pageSize);
+  const type = getModalType();
+  const rows = buildRows(type, state.logType).slice(0, state.pageSize);
   const timeLabel = state.logType === "payment" ? "下单时间" : state.logType === "register" ? "注册时间" : "登录时间";
   const accountCol = {
     title: "账号信息",
@@ -368,13 +389,13 @@ function renderLogTable() {
   if (state.logType === "payment") {
     columns.push(orderCol);
   }
-  if (state.type !== "account") {
+  if (type !== "account") {
     columns.push(accountCol);
   }
-  if (state.type !== "device") {
+  if (type !== "device") {
     columns.push(deviceCol);
   }
-  if (state.type !== "ip") {
+  if (type !== "ip") {
     columns.push(ipCol);
   }
   columns.push(
@@ -404,7 +425,8 @@ function renderLogs() {
 }
 
 function relationData() {
-  if (state.type === "account") {
+  const type = getModalType();
+  if (type === "account") {
     return {
       left: { title: "关联设备", count: "14台", kind: "device", label: "设备ID：", value: "dev1231293911111111...", sub: "mi 17 pro max" },
       right: { title: "关联IP", count: "14个", kind: "ip", label: "IP地址：", value: "192.168.1111.1111", sub: "中国 山东 济南" },
@@ -412,7 +434,7 @@ function relationData() {
       summary: "近30日共关联设备14台，IP 14个",
     };
   }
-  if (state.type === "device") {
+  if (type === "device") {
     return {
       left: { title: "关联账号", count: "3个", kind: "account", label: "SDKID：", value: "2312939111111111...", sub: "账号名  sgs123" },
       right: { title: "关联IP", count: "14个", kind: "ip", label: "IP地址：", value: "192.168.1111.1111", sub: "中国 山东 济南" },
@@ -464,10 +486,11 @@ function renderRelations() {
 }
 
 function renderModalBody() {
-  const queryValue = queryInput.value.trim();
-  const info = state.type === "account" ? renderAccountInfo(queryValue) : state.type === "device" ? renderDeviceInfo(queryValue) : renderIpInfo(queryValue);
-  modalTitle.textContent = TYPE_CONFIG[state.type].title;
-  state.logType = TYPE_CONFIG[state.type].tabs.includes(state.logType) ? state.logType : "login";
+  const type = getModalType();
+  const queryValue = getModalValue();
+  const info = type === "account" ? renderAccountInfo(queryValue) : type === "device" ? renderDeviceInfo(queryValue) : renderIpInfo(queryValue);
+  modalTitle.textContent = TYPE_CONFIG[type].title;
+  state.logType = TYPE_CONFIG[type].tabs.includes(state.logType) ? state.logType : "login";
   modalBody.innerHTML = `${info}${renderTags()}${renderLogs()}${renderRelations()}`;
   bindModalDynamicEvents();
 }
@@ -518,8 +541,9 @@ function bindModalDynamicEvents() {
   document.querySelector("#exportButton")?.addEventListener("click", exportExcel);
 }
 
-function openModal() {
-  const value = queryInput.value.trim();
+function openModal(context = null) {
+  state.modal = context;
+  const value = getModalValue();
   state.empty = /空|empty|zero/.test(value.toLowerCase());
   state.pageSize = 5;
   state.logType = "login";
@@ -531,11 +555,13 @@ function openModal() {
 function closeModal() {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  state.modal = null;
 }
 
 function exportExcel() {
+  const type = getModalType();
   const sheets = ["login", "register", "payment"].map((log) => {
-    const rows = buildRows(state.type, log).slice(0, 20);
+    const rows = buildRows(type, log).slice(0, 20);
     const tableRows = rows.map((row) => `
       <tr>
         <td>${row.time}</td>
@@ -556,7 +582,7 @@ function exportExcel() {
   const blob = new Blob([`<html><meta charset="UTF-8"><body>${sheets}</body></html>`], { type: "application/vnd.ms-excel;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${TYPE_CONFIG[state.type].title}-导出详情.xls`;
+  link.download = `${TYPE_CONFIG[type].title}-导出详情.xls`;
   link.click();
   URL.revokeObjectURL(link.href);
   showToast("导出详情已生成");
@@ -605,10 +631,12 @@ queryForm.addEventListener("submit", (event) => {
 
 document.querySelectorAll(".history-tag").forEach((tag) => {
   tag.addEventListener("click", () => {
-    applyType(tag.dataset.type, tag.dataset.field);
-    queryInput.value = tag.dataset.value;
-    state.values[state.type] = tag.dataset.value;
-    queryInput.focus();
+    errorText.textContent = "";
+    openModal({
+      type: tag.dataset.type,
+      field: tag.dataset.field,
+      value: tag.dataset.value,
+    });
   });
 });
 
