@@ -35,6 +35,16 @@ const TYPE_CONFIG = {
   },
 };
 
+const DIMENSION_CONFIG = {
+  sdkId: { resultType: "account", field: "SDKID", placeholder: "输入 SDKID", hint: "请输入完整 SDKID；按 Enter 快速查询" },
+  passportId: { resultType: "account", field: "通行证ID", placeholder: "输入通行证ID", hint: "请输入完整通行证ID，支持直接粘贴；按 Enter 快速查询" },
+  accountName: { resultType: "account", field: "账号名", placeholder: "输入账号名", hint: "支持账号名精确查询；按 Enter 快速查询" },
+  loginPhone: { resultType: "account", field: "登录手机", placeholder: "输入登录手机", hint: "支持带国家或地区区号的完整手机号；按 Enter 快速查询" },
+  deviceId: { resultType: "device", field: "设备ID", placeholder: "输入设备ID", hint: "请输入完整设备ID；按 Enter 快速查询" },
+  deviceFingerprint: { resultType: "device", field: "设备指纹", placeholder: "输入设备指纹", hint: "输入完整设备指纹，可查询关联账号；按 Enter 快速查询" },
+  ipAddress: { resultType: "ip", field: "IP", placeholder: "输入 IPv4 或 IPv6 地址", hint: "支持 IPv4 和 IPv6 地址；按 Enter 快速查询" },
+};
+
 const LOG_LABELS = {
   login: "登录",
   register: "注册",
@@ -43,12 +53,45 @@ const LOG_LABELS = {
 
 const ACTIONS = ["验证码验证", "验证码验证通过", "滑块验证", "滑块验证通过", "放行", "拦截"];
 
+function padNumber(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatDate(date) {
+  return `${date.getFullYear()}-${padNumber(date.getMonth() + 1)}-${padNumber(date.getDate())}`;
+}
+
+function parseDate(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getDefaultLogRange() {
+  const end = new Date();
+  const start = addDays(end, -29);
+  return {
+    start: formatDate(start),
+    end: formatDate(end),
+  };
+}
+
 const state = {
+  dimension: "sdkId",
   type: "account",
   values: {
-    account: "",
-    device: "",
-    ip: "",
+    sdkId: "",
+    passportId: "",
+    accountName: "",
+    loginPhone: "",
+    deviceId: "",
+    deviceFingerprint: "",
+    ipAddress: "",
   },
   fields: {
     account: "账号名",
@@ -57,6 +100,10 @@ const state = {
   },
   logType: "login",
   pageSize: 5,
+  logRange: getDefaultLogRange(),
+  datePickerOpen: false,
+  dateSelecting: "start",
+  pickerMonth: null,
   empty: false,
   modal: null,
 };
@@ -68,6 +115,8 @@ const hintText = document.querySelector("#hintText");
 const errorText = document.querySelector("#errorText");
 const queryForm = document.querySelector(".query-form");
 const queryButton = document.querySelector("#queryButton");
+const queryButtonLabel = document.querySelector(".query-button-label");
+const queryClear = document.querySelector("#queryClear");
 const modal = document.querySelector("#resultModal");
 const modalTitle = document.querySelector("#modalTitle");
 const modalBody = document.querySelector(".modal-body");
@@ -87,22 +136,37 @@ function renderFieldOptions(type, preferredField) {
   fieldSelect.value = nextField;
 }
 
-function applyType(type, preferredField) {
-  state.values[state.type] = queryInput.value;
-  state.type = type;
-  const config = TYPE_CONFIG[type];
+function updateClearButton() {
+  queryClear.classList.toggle("visible", Boolean(queryInput.value));
+}
+
+function setQueryError(message = "") {
+  errorText.textContent = message;
+  queryForm.classList.toggle("has-error", Boolean(message));
+  document.querySelector("#queryHelp").hidden = Boolean(message);
+}
+
+function applyDimension(dimension, preferredField) {
+  state.values[state.dimension] = queryInput.value;
+  const dimensionConfig = DIMENSION_CONFIG[dimension];
+  state.dimension = dimension;
+  state.type = dimensionConfig.resultType;
+  state.fields[state.type] = preferredField || dimensionConfig.field;
 
   tabs.forEach((tab) => {
-    const selected = tab.dataset.type === type;
+    const selected = tab.dataset.dimension === dimension;
     tab.classList.toggle("active", selected);
     tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
   });
 
-  renderFieldOptions(type, preferredField || state.fields[type]);
-  queryInput.value = state.values[type] || "";
-  queryInput.placeholder = getPlaceholder(type);
-  hintText.textContent = config.hint;
-  errorText.textContent = "";
+  renderFieldOptions(state.type, state.fields[state.type]);
+  queryInput.value = state.values[dimension] || "";
+  queryInput.placeholder = dimensionConfig.placeholder;
+  queryInput.setAttribute("aria-label", dimensionConfig.placeholder);
+  hintText.textContent = dimensionConfig.hint;
+  setQueryError();
+  updateClearButton();
 }
 
 function showToast(message) {
@@ -317,7 +381,74 @@ function renderLogTabs() {
   return `
     <div class="log-head">
       <div class="log-tabs" role="tablist" aria-label="日志类型">${tabsHtml}</div>
-      <button id="exportButton" class="export-button" type="button"><i class="ti ti-download"></i>导出详情</button>
+      <div class="log-actions">
+        <div class="date-range-wrap">
+          <button id="logDateRange" class="date-range-button" type="button" aria-haspopup="dialog" aria-expanded="${state.datePickerOpen}">
+            <span>${state.logRange.start}</span>
+            <span class="date-range-separator">→</span>
+            <span>${state.logRange.end}</span>
+            <i class="ti ti-calendar" aria-hidden="true"></i>
+          </button>
+          ${state.datePickerOpen ? renderDatePickerDropdown() : ""}
+        </div>
+        <button id="exportButton" class="export-button" type="button"><i class="ti ti-download"></i>导出详情</button>
+      </div>
+    </div>
+  `;
+}
+
+function getRangeDays() {
+  const start = parseDate(state.logRange.start);
+  const end = parseDate(state.logRange.end);
+  return Math.max(1, Math.round((end - start) / 86400000) + 1);
+}
+
+function renderDatePickerDropdown() {
+  const base = state.pickerMonth ? parseDate(`${state.pickerMonth}-01`) : parseDate(state.logRange.end);
+  const year = base.getFullYear();
+  const month = base.getMonth();
+  const first = new Date(year, month, 1);
+  const gridStart = addDays(first, -((first.getDay() + 6) % 7));
+  const today = formatDate(new Date());
+  const start = parseDate(state.logRange.start);
+  const end = parseDate(state.logRange.end);
+  const monthLabel = base.toLocaleString("en-US", { month: "short" });
+  const rows = Array.from({ length: 6 }, (_, rowIndex) => {
+    const cells = Array.from({ length: 7 }, (_, colIndex) => {
+      const date = addDays(gridStart, rowIndex * 7 + colIndex);
+      const value = formatDate(date);
+      const inView = date.getMonth() === month;
+      const isStart = value === state.logRange.start;
+      const isEnd = value === state.logRange.end;
+      const inRange = date >= start && date <= end;
+      const classes = [
+        "picker-day",
+        inView ? "" : "out-month",
+        value === today ? "today" : "",
+        isStart ? "range-start" : "",
+        isEnd ? "range-end" : "",
+        inRange ? "in-range" : "",
+      ].filter(Boolean).join(" ");
+      return `<button class="${classes}" type="button" data-date="${value}">${date.getDate()}</button>`;
+    }).join("");
+    return `<div class="picker-row">${cells}</div>`;
+  }).join("");
+
+  return `
+    <div id="logDatePicker" class="date-picker-dropdown" role="dialog" aria-label="日期范围选择">
+      <div class="picker-arrow" aria-hidden="true"></div>
+      <div class="picker-header">
+        <button class="picker-nav" type="button" data-picker-nav="-12" aria-label="上一年">«</button>
+        <button class="picker-nav" type="button" data-picker-nav="-1" aria-label="上一月">‹</button>
+        <div class="picker-title"><span>${monthLabel}</span><span>${year}</span></div>
+        <button class="picker-nav" type="button" data-picker-nav="1" aria-label="下一月">›</button>
+        <button class="picker-nav" type="button" data-picker-nav="12" aria-label="下一年">»</button>
+      </div>
+      <div class="picker-body">
+        <div class="picker-week"><span>Mon</span><span>Tue</span><span>Wen</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+        ${rows}
+      </div>
+      <button id="pickerToday" class="picker-today" type="button">Today</button>
     </div>
   `;
 }
@@ -326,7 +457,7 @@ function renderTableFooter(logType) {
   const actionText = logType === "payment" ? "下单" : logType === "register" ? "注册" : "登录";
   return `
     <div class="table-footer">
-      <span>近30日共发起${actionText}48次，其中高风险${actionText}30次</span>
+      <span>近${getRangeDays()}日共发起${actionText}48次，其中高风险${actionText}30次</span>
       <div class="pager" aria-label="分页">
         <span class="muted">&lt;</span>
         <span>1</span>
@@ -501,6 +632,15 @@ function bindModalDynamicEvents() {
   const moreTags = document.querySelector("#moreTags");
   const pageSizeSelect = document.querySelector("#pageSizeSelect");
   const logTableArea = document.querySelector("#logTableArea");
+  const logSection = document.querySelector(".log-section");
+  const dateRangeButton = document.querySelector("#logDateRange");
+
+  function refreshLogSection() {
+    if (logSection) {
+      logSection.outerHTML = renderLogs();
+      bindModalDynamicEvents();
+    }
+  }
 
   infoToggle?.addEventListener("click", () => {
     const expanded = infoToggle.getAttribute("aria-expanded") === "true";
@@ -530,6 +670,59 @@ function bindModalDynamicEvents() {
     });
   });
 
+  dateRangeButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    state.datePickerOpen = !state.datePickerOpen;
+    state.pickerMonth = state.pickerMonth || state.logRange.end.slice(0, 7);
+    refreshLogSection();
+  });
+
+  document.querySelectorAll(".picker-nav").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const current = state.pickerMonth ? parseDate(`${state.pickerMonth}-01`) : parseDate(state.logRange.end);
+      current.setMonth(current.getMonth() + Number(button.dataset.pickerNav));
+      state.pickerMonth = formatDate(current).slice(0, 7);
+      state.datePickerOpen = true;
+      refreshLogSection();
+    });
+  });
+
+  document.querySelectorAll(".picker-day").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const selected = button.dataset.date;
+      if (state.dateSelecting === "start") {
+        state.logRange.start = selected;
+        if (parseDate(selected) > parseDate(state.logRange.end)) {
+          state.logRange.end = selected;
+        }
+        state.dateSelecting = "end";
+        state.datePickerOpen = true;
+        showToast("请选择结束日期");
+      } else {
+        const start = parseDate(state.logRange.start);
+        const end = parseDate(selected);
+        state.logRange = end < start
+          ? { start: selected, end: state.logRange.start }
+          : { start: state.logRange.start, end: selected };
+        state.dateSelecting = "start";
+        state.datePickerOpen = false;
+      }
+      state.pickerMonth = selected.slice(0, 7);
+      refreshLogSection();
+    });
+  });
+
+  document.querySelector("#pickerToday")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    state.logRange = getDefaultLogRange();
+    state.dateSelecting = "start";
+    state.datePickerOpen = false;
+    state.pickerMonth = state.logRange.end.slice(0, 7);
+    refreshLogSection();
+  });
+
   pageSizeSelect?.addEventListener("change", () => {
     state.pageSize = Number(pageSizeSelect.value);
     if (logTableArea) {
@@ -547,6 +740,10 @@ function openModal(context = null) {
   state.empty = /空|empty|zero/.test(value.toLowerCase());
   state.pageSize = 5;
   state.logType = "login";
+  state.logRange = getDefaultLogRange();
+  state.datePickerOpen = false;
+  state.dateSelecting = "start";
+  state.pickerMonth = state.logRange.end.slice(0, 7);
   renderModalBody();
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
@@ -588,8 +785,30 @@ function exportExcel() {
   showToast("导出详情已生成");
 }
 
+function validateQueryValue(value) {
+  if (["sdkId", "passportId"].includes(state.dimension) && !/^[A-Za-z0-9_-]{3,64}$/.test(value)) return `${DIMENSION_CONFIG[state.dimension].field}格式不正确`;
+  if (["deviceId", "deviceFingerprint"].includes(state.dimension) && value.length < 4) return `${DIMENSION_CONFIG[state.dimension].field}格式不正确`;
+  if (state.dimension === "ipAddress") {
+    const ipv4 = value.split(".");
+    const validIpv4 = ipv4.length === 4 && ipv4.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
+    const validIpv6 = value.includes(":") && /^[0-9A-Fa-f:]+$/.test(value);
+    if (!validIpv4 && !validIpv6) return "IP 地址格式不正确";
+  }
+  if (state.dimension === "loginPhone" && !/^\+?[0-9\s-]{7,20}$/.test(value)) return "登录手机格式不正确";
+  return "";
+}
+
 tabs.forEach((tab) => {
-  tab.addEventListener("click", () => applyType(tab.dataset.type));
+  tab.addEventListener("click", () => applyDimension(tab.dataset.dimension));
+  tab.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    const currentIndex = tabs.indexOf(tab);
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const nextTab = tabs[(currentIndex + direction + tabs.length) % tabs.length];
+    applyDimension(nextTab.dataset.dimension);
+    nextTab.focus();
+  });
 });
 
 fieldSelect.addEventListener("change", () => {
@@ -598,7 +817,23 @@ fieldSelect.addEventListener("change", () => {
 });
 
 queryInput.addEventListener("input", () => {
-  state.values[state.type] = queryInput.value;
+  state.values[state.dimension] = queryInput.value;
+  setQueryError();
+  updateClearButton();
+});
+
+queryInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || queryButton.classList.contains("loading")) return;
+  event.preventDefault();
+  queryForm.requestSubmit();
+});
+
+queryClear.addEventListener("click", () => {
+  queryInput.value = "";
+  state.values[state.dimension] = "";
+  setQueryError();
+  updateClearButton();
+  queryInput.focus();
 });
 
 queryForm.addEventListener("submit", (event) => {
@@ -606,37 +841,46 @@ queryForm.addEventListener("submit", (event) => {
   const value = queryInput.value.trim();
 
   if (!value) {
-    const message = `请输入${state.fields[state.type]}`;
-    errorText.textContent = message;
+    const message = "请输入查询内容";
+    setQueryError(message);
     showToast(message);
     queryInput.focus();
     return;
   }
   if (/失败|error|fail/i.test(value)) {
-    errorText.textContent = "";
+    setQueryError("查询失败，请稍后重试");
     showToast("查询失败，请稍后重试");
     return;
   }
 
-  errorText.textContent = "";
+  const validationError = validateQueryValue(value);
+  if (validationError) {
+    setQueryError(validationError);
+    showToast(validationError);
+    queryInput.focus();
+    return;
+  }
+
+  setQueryError();
   queryButton.classList.add("loading");
-  queryButton.textContent = "查询中";
+  queryButton.setAttribute("aria-busy", "true");
+  queryButtonLabel.textContent = "查询中";
 
   window.setTimeout(() => {
     queryButton.classList.remove("loading");
-    queryButton.textContent = "立即查询";
+    queryButton.setAttribute("aria-busy", "false");
+    queryButtonLabel.textContent = "开始查询";
     openModal();
   }, 260);
 });
 
 document.querySelectorAll(".history-tag").forEach((tag) => {
   tag.addEventListener("click", () => {
-    errorText.textContent = "";
-    openModal({
-      type: tag.dataset.type,
-      field: tag.dataset.field,
-      value: tag.dataset.value,
-    });
+    applyDimension(tag.dataset.dimension, tag.dataset.field);
+    queryInput.value = tag.dataset.value;
+    state.values[state.dimension] = tag.dataset.value;
+    updateClearButton();
+    queryInput.focus();
   });
 });
 
@@ -656,4 +900,4 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-applyType("account");
+applyDimension("sdkId");

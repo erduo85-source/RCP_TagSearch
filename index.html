@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>多维画像查询</title>
+    <title>用户风险画像</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -58,50 +58,57 @@
 
       <main class="main">
         <section class="page-title">
-          <h1>多维画像查询</h1>
-          <p>支持账号、设备、IP维度的用户洞察，快速定位登录、注册、支付风险</p>
+          <h1>用户风险画像</h1>
+          <p>风险调查 / 用户风险画像</p>
         </section>
 
-        <section class="query-card" aria-labelledby="query-title">
-          <h2 id="query-title" class="sr-only">查询条件</h2>
+        <section class="query-stage" aria-labelledby="query-title">
+          <div class="query-decoration" aria-hidden="true">
+            <span class="scan-ring scan-ring-inner"></span>
+            <span class="scan-ring scan-ring-outer"></span>
+            <span class="scan-node node-one"></span>
+            <span class="scan-node node-two"></span>
+            <span class="scan-node node-three"></span>
+          </div>
+          <div class="query-shell">
+            <div class="query-intro">
+              <div class="query-emblem" aria-hidden="true"><span class="emblem-orbit orbit-top"></span><span class="emblem-core">R</span><span class="emblem-orbit orbit-bottom"></span></div>
+              <div class="query-eyebrow">RISK INTELLIGENCE</div>
+              <h2 id="query-title">查询用户风险画像</h2>
+              <p>从任一线索出发，聚合账号、设备与网络关系，快速定位风险证据。</p>
+            </div>
+            <div class="query-operation">
           <div class="tabs" role="tablist" aria-label="查询维度">
-            <button class="tab active" type="button" data-type="account" role="tab" aria-selected="true">按账号</button>
-            <button class="tab" type="button" data-type="device" role="tab" aria-selected="false">按设备</button>
-            <button class="tab" type="button" data-type="ip" role="tab" aria-selected="false">按IP</button>
+            <button class="tab active" type="button" data-dimension="sdkId" role="tab" aria-selected="true">SDKID</button>
+            <button class="tab" type="button" data-dimension="passportId" role="tab" aria-selected="false">通行证ID</button>
+            <button class="tab" type="button" data-dimension="accountName" role="tab" aria-selected="false">账号名</button>
+            <button class="tab" type="button" data-dimension="loginPhone" role="tab" aria-selected="false">登录手机</button>
+            <button class="tab" type="button" data-dimension="deviceId" role="tab" aria-selected="false">设备ID</button>
+            <button class="tab" type="button" data-dimension="deviceFingerprint" role="tab" aria-selected="false">设备指纹</button>
+            <button class="tab" type="button" data-dimension="ipAddress" role="tab" aria-selected="false">IP地址</button>
           </div>
 
           <form class="query-form" novalidate>
-            <select id="fieldSelect" class="field-select" aria-label="搜索字段"></select>
-            <input id="queryInput" class="query-input" type="text" placeholder="请输入账号名" autocomplete="off" />
-            <button id="queryButton" class="query-button" type="submit">立即查询</button>
+            <i class="ti ti-search query-search-icon" aria-hidden="true"></i>
+            <select id="fieldSelect" class="field-select sr-only" aria-label="搜索字段"></select>
+            <input id="queryInput" class="query-input" type="search" placeholder="输入 SDKID" autocomplete="off" aria-describedby="queryHelp errorText" />
+            <button id="queryClear" class="query-clear" type="button" aria-label="清空查询内容"><i class="ti ti-x"></i></button>
+            <button id="queryButton" class="query-button" type="submit" aria-busy="false"><span class="button-spinner" aria-hidden="true"></span><span class="query-button-label">开始查询</span></button>
           </form>
 
-          <div class="hint-line">
-            <i class="ti ti-info-circle hint-icon" aria-hidden="true"></i>
-            <span id="hintText">支持通过账号名、通行证ID、登录手机、SDKID，快速检索风险账号</span>
+          <div class="query-feedback" aria-live="polite">
+            <div id="queryHelp" class="hint-line"><span id="hintText">请输入完整 SDKID；按 Enter 快速查询</span></div>
+            <div id="errorText" class="error-text" role="alert"></div>
           </div>
-          <div id="errorText" class="error-text" role="alert"></div>
-        </section>
-
-        <section class="recent-card" aria-labelledby="recent-title">
-          <div class="recent-head">
-            <div class="recent-title-wrap">
-              <i class="ti ti-history recent-icon" aria-hidden="true"></i>
-              <h2 id="recent-title">最近查询</h2>
-            </div>
-            <button class="clear-button" type="button">清空记录</button>
-          </div>
+          <div class="recent-row" aria-labelledby="recent-title">
+            <h3 id="recent-title">最近查询</h3>
           <div class="recent-list" aria-label="最近查询列表">
-            <button class="history-tag" type="button" data-type="account" data-field="账号名" data-value="10001_12392193311"><i class="ti ti-search tag-icon"></i>10001_12392193311<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEVB-1311"><i class="ti ti-device-desktop tag-icon"></i>DEVB-1311<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEV-54C291"><i class="ti ti-device-desktop tag-icon"></i>DEV-54C291<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="ip" data-field="IP地址" data-value="192.21.11.8"><i class="ti ti-world tag-icon"></i>192.21.11.8<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="ip" data-field="IP地址" data-value="10.21.66.14"><i class="ti ti-world tag-icon"></i>10.21.66.14<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="account" data-field="账号名" data-value="user_8825"><i class="ti ti-user tag-icon"></i>user_8825<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="account" data-field="SDKID" data-value="SDK08521"><i class="ti ti-search tag-icon"></i>SDK08521<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="account" data-field="SDKID" data-value="SDK1021848"><i class="ti ti-search tag-icon"></i>SDK1021848<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEVB-1311"><i class="ti ti-device-desktop tag-icon"></i>DEVB-1311<i class="ti ti-x tag-close"></i></button>
-            <button class="history-tag" type="button" data-type="device" data-field="设备ID" data-value="DEV-54C291"><i class="ti ti-device-desktop tag-icon"></i>DEV-54C291<i class="ti ti-x tag-close"></i></button>
+            <button class="history-tag" type="button" data-dimension="accountName" data-type="account" data-field="账号名" data-value="alex.chen@example.com" title="alex.chen@example.com"><span class="history-type">账号名</span><span class="history-value">alex.chen@example.com</span></button>
+            <button class="history-tag" type="button" data-dimension="passportId" data-type="account" data-field="通行证ID" data-value="184027391" title="184027391"><span class="history-type">通行证ID</span><span class="history-value">184027391</span></button>
+            <button class="history-tag" type="button" data-dimension="deviceFingerprint" data-type="device" data-field="设备指纹" data-value="DF-9A72-41C8" title="DF-9A72-41C8"><span class="history-type">设备指纹</span><span class="history-value">DF-9A72-41C8</span></button>
+          </div>
+          </div>
+            </div>
           </div>
         </section>
       </main>
