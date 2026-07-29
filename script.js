@@ -674,7 +674,7 @@ function bindModalDynamicEvents() {
     }
   }
 
-  if (infoToggle?.dataset.bound !== "true") {
+  if (infoToggle && infoToggle.dataset.bound !== "true") {
     infoToggle.dataset.bound = "true";
     infoToggle.addEventListener("click", () => {
       const expanded = infoToggle.getAttribute("aria-expanded") === "true";
@@ -683,7 +683,7 @@ function bindModalDynamicEvents() {
     });
   }
 
-  if (moreTags?.dataset.bound !== "true") {
+  if (moreTags && moreTags.dataset.bound !== "true") {
     moreTags.dataset.bound = "true";
     moreTags.addEventListener("click", () => {
       const tagWrap = document.querySelector("#tagWrap");
@@ -715,7 +715,7 @@ function bindModalDynamicEvents() {
     });
   });
 
-  if (dateRangeButton?.dataset.bound !== "true") {
+  if (dateRangeButton && dateRangeButton.dataset.bound !== "true") {
     dateRangeButton.dataset.bound = "true";
     dateRangeButton.addEventListener("click", (event) => {
       event.stopPropagation();
