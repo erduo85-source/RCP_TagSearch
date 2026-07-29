@@ -920,8 +920,9 @@ body.modal-open {
 .log-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  margin-left: auto;
   position: relative;
+  flex: 0 0 auto;
 }
 
 .date-range-wrap {
@@ -1096,31 +1097,6 @@ body.modal-open {
   line-height: 22px;
 }
 
-.export-button {
-  height: 32px;
-  margin-top: 0;
-  border: 1px solid #096dd9;
-  border-radius: 5px;
-  background: #fff;
-  color: #1677ff;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 8px;
-  font-size: 13px;
-  line-height: 22px;
-  border-color: #91caff;
-}
-
-.export-button .ti {
-  font-size: 14px;
-}
-
-.export-button:disabled {
-  border-color: #d9e1eb;
-  color: #a8b3c2;
-  cursor: not-allowed;
-}
 
 .log-table-area {
   border: 1px solid #e3e9f1;
@@ -1792,15 +1768,6 @@ body.modal-open {
   width: 256px;
 }
 
-.export-button:hover {
-  border-color: #4096ff;
-  background: #f0f6ff;
-}
-
-.export-button:focus-visible {
-  outline: 2px solid #1677ff;
-  outline-offset: 2px;
-}
 
 .portrait-table.columns-6 {
   min-width: 1320px;

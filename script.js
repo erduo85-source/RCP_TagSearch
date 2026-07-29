@@ -415,7 +415,6 @@ function renderLogTabs() {
           </button>
           ${state.datePickerOpen ? renderDatePickerDropdown() : ""}
         </div>
-        <button id="exportButton" class="export-button" type="button"${state.empty ? " disabled" : ""}><i class="ti ti-download"></i>导出详情</button>
       </div>
     </div>
   `;
@@ -796,11 +795,6 @@ function bindModalDynamicEvents() {
     });
   });
 
-  const exportButton = document.querySelector("#exportButton");
-  if (exportButton && exportButton.dataset.bound !== "true") {
-    exportButton.dataset.bound = "true";
-    exportButton.addEventListener("click", exportExcel);
-  }
 }
 function openModal(context = null) {
   lastFocusedElement = document.activeElement;
@@ -828,35 +822,6 @@ function closeModal() {
   state.modal = null;
   if (lastFocusedElement instanceof HTMLElement) lastFocusedElement.focus();
   lastFocusedElement = null;
-}
-function exportExcel() {
-  if (state.empty) return;
-  const type = getModalType();
-  const log = state.logType;
-  const rows = buildRows(type, log);
-  const tableRows = rows.map((row) => `
-    <tr>
-      <td>${row.time}</td>
-      <td>${row.account}</td>
-      <td>${row.accountSub}</td>
-      <td>${row.device}</td>
-      <td>${row.deviceSub}</td>
-      <td>${row.ip}</td>
-      <td>${row.ipSub}</td>
-      <td>${row.order}</td>
-      <td>${row.amount}</td>
-      <td>${row.score}</td>
-      <td>${row.action}</td>
-    </tr>
-  `).join("");
-  const sheet = `<h3>${LOG_LABELS[log]}日志</h3><table><tr><th>时间</th><th>账号</th><th>账号名</th><th>设备ID</th><th>设备型号</th><th>IP地址</th><th>归属地</th><th>订单号</th><th>金额</th><th>风险分</th><th>处置动作</th></tr>${tableRows}</table>`;
-  const blob = new Blob([`<html><meta charset="UTF-8"><body>${sheet}</body></html>`], { type: "application/vnd.ms-excel;charset=utf-8" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `${TYPE_CONFIG[type].title}_${LOG_LABELS[log]}日志_${state.logRange.start}_${state.logRange.end}.xls`;
-  link.click();
-  URL.revokeObjectURL(link.href);
-  showToast("导出详情已生成");
 }
 function validateQueryValue(value) {
   if (["sdkId", "passportId"].includes(state.dimension) && !/^[A-Za-z0-9_-]{3,64}$/.test(value)) return `${DIMENSION_CONFIG[state.dimension].field}格式不正确`;
