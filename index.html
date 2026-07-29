@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>用户风险画像</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="./styles.css?v=20260729-modal-v19" />
+    <link rel="stylesheet" href="./styles.css?v=20260729-sidebar-v20" />
   </head>
   <body>
     <div class="app-shell">
@@ -14,28 +14,49 @@
       </header>
 
       <aside class="sidebar" aria-label="侧边导航">
-        <div class="menu">
-          <div class="menu-row">
-            <i class="ti ti-chart-histogram menu-icon" aria-hidden="true"></i>
-            <span>支付风控引擎</span>
-            <i class="ti ti-chevron-right menu-arrow-icon" aria-hidden="true"></i>
-          </div>
-          <div class="menu-row">
-            <i class="ti ti-chart-histogram menu-icon" aria-hidden="true"></i>
-            <span>用户风控引擎</span>
-            <i class="ti ti-chevron-right menu-arrow-icon" aria-hidden="true"></i>
-          </div>
-          <div class="menu-row expanded">
-            <i class="ti ti-users menu-icon" aria-hidden="true"></i>
-            <span>用户画像中心</span>
-            <i class="ti ti-chevron-down menu-arrow-icon" aria-hidden="true"></i>
-          </div>
+        <nav class="menu" aria-label="风控功能目录">
+          <button class="menu-row expanded" type="button" aria-expanded="true">
+            <img class="menu-icon-img" src="./assets/sidebar-payment.svg" alt="" aria-hidden="true" />
+            <span>支付风控</span>
+            <img class="menu-arrow-img" src="./assets/sidebar-chevron-expanded.svg" alt="" aria-hidden="true" />
+          </button>
           <div class="submenu">
-            <button class="submenu-row selected" type="button">用户风险查询</button>
+            <button class="submenu-row" type="button">支付安全概览</button>
+            <button class="submenu-row" type="button">支付风控策略</button>
+            <button class="submenu-row" type="button">支付风控日志</button>
+          </div>
+
+          <button class="menu-row expanded" type="button" aria-expanded="true">
+            <img class="menu-icon-img" src="./assets/sidebar-user-risk.svg" alt="" aria-hidden="true" />
+            <span>用户风控</span>
+            <img class="menu-arrow-img" src="./assets/sidebar-chevron-expanded.svg" alt="" aria-hidden="true" />
+          </button>
+          <div class="submenu">
+            <button class="submenu-row" type="button">用户安全概览</button>
+            <button class="submenu-row" type="button">用户风控策略</button>
+            <button class="submenu-row" type="button">用户风控日志</button>
+          </div>
+
+          <button class="menu-row expanded" type="button" aria-expanded="true">
+            <img class="menu-icon-img" src="./assets/sidebar-settings.svg" alt="" aria-hidden="true" />
+            <span>画像中心</span>
+            <img class="menu-arrow-img" src="./assets/sidebar-section-chevron.svg" alt="" aria-hidden="true" />
+          </button>
+          <div class="submenu">
+            <button class="submenu-row selected" type="button" aria-current="page">用户风险查询</button>
             <button class="submenu-row" type="button">实时检测管理</button>
             <button class="submenu-row" type="button">用户标签管理</button>
           </div>
-        </div>
+
+          <button class="menu-row standalone" type="button">
+            <img class="menu-icon-img" src="./assets/sidebar-settings.svg" alt="" aria-hidden="true" />
+            <span>白名单管理</span>
+          </button>
+          <button class="menu-row standalone" type="button">
+            <img class="menu-icon-img" src="./assets/sidebar-settings.svg" alt="" aria-hidden="true" />
+            <span>操作日志</span>
+          </button>
+        </nav>
       </aside>
 
       <main class="main">
@@ -56,7 +77,7 @@
             <div class="query-intro">
               <div class="query-emblem" aria-hidden="true"><span class="emblem-orbit orbit-top"></span><span class="emblem-core">R</span><span class="emblem-orbit orbit-bottom"></span></div>
               <div class="query-eyebrow">RISK INTELLIGENCE</div>
-              <h2 id="query-title">查询用户风险画像</h2>
+              <h2 id="query-title">用户风险查询</h2>
               <p>从任一线索出发，聚合账号、设备与网络关系，快速定位风险证据。</p>
             </div>
             <div class="query-operation">

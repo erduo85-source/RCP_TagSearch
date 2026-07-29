@@ -157,6 +157,21 @@ button {
   font-size: 17px;
   line-height: 17px;
 }
+.menu-icon-img {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  object-fit: contain;
+}
+
+.menu-arrow-img {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  margin-right: 9px;
+  flex: 0 0 16px;
+  transform: rotate(180deg);
+}
 
 .menu-arrow-icon {
   margin-left: auto;
@@ -169,12 +184,24 @@ button {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  margin-bottom: 3px;
 }
 
 .submenu-row {
   padding-left: 42px;
   font-size: 13px;
   line-height: 20px;
+}
+
+.menu-row:hover,
+.submenu-row:hover {
+  background: #f7fafe;
+}
+
+.menu-row:focus-visible,
+.submenu-row:focus-visible {
+  outline: 2px solid rgba(21, 93, 252, 0.35);
+  outline-offset: -2px;
 }
 
 .submenu-row.selected {
