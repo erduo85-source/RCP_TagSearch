@@ -610,7 +610,7 @@ function renderRelationCard(card) {
   const headers = card.kind === "ip" ? ["IP地址", "归属地", "关联次数"] : card.kind === "device" ? ["设备ID", "设备型号", "关联次数"] : ["SDKID", "账号名", "关联次数"];
   const subValue = card.kind === "account" ? card.sub.replace(/^账号名\s*/, "") : card.sub;
   const rows = Array.from({ length: total }, (_, index) => `
-    <div class="relation-row relation-item${index >= 5 ? " is-extra" : ""}" role="row">
+    <div class="relation-row relation-item" role="row">
       <span class="relation-primary" role="cell"><span class="relation-value" title="${card.value}">${card.value}</span>${copyButton(copyLabel, card.value)}</span>
       <span class="relation-secondary" role="cell" title="${subValue}">${subValue}</span>
       <span class="relation-count" role="cell">${total - index}</span>
@@ -623,7 +623,6 @@ function renderRelationCard(card) {
         <div class="relation-row relation-table-head" role="row">${headers.map((header) => `<span role="columnheader">${header}</span>`).join("")}</div>
         ${rows}
       </div>
-      ${total > 5 ? `<button class="relation-more" type="button" data-relation-toggle>查看更多 &gt;</button>` : ""}
     </div>
   `;
 }
@@ -794,16 +793,6 @@ function bindModalDynamicEvents() {
     button.addEventListener("click", () => {
       state.page += Number(button.dataset.pageDelta);
       refreshLogTable();
-    });
-  });
-
-  document.querySelectorAll("[data-relation-toggle]").forEach((button) => {
-    if (button.dataset.bound === "true") return;
-    button.dataset.bound = "true";
-    button.addEventListener("click", () => {
-      const card = button.closest(".relation-card");
-      const expanded = card?.classList.toggle("expanded") || false;
-      button.textContent = expanded ? "收起 <" : "查看更多 >";
     });
   });
 
